@@ -1,111 +1,119 @@
 // Put your client side JS code here
-
-const fetchBooks = () => {
-    const search = document.getElementById("search").value;
-
+let fetchTimeout;
+const fetchBooks = (search) => {
+  const hint = document.getElementById("hint");
+  hint.innerHTML = "Fetching...";
+  hint.style.display = "block";
+  clearTimeout(fetchTimeout);
+  fetchTimeout = setTimeout(() => {
+    getFavoriteIDS();
     fetch(`https://reststop.randomhouse.com/resources/works?search=${search}`)
-        .then((response) => response.text())
-        .then((data) => {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data, "application/xml");
-            console.log(xml);
-            parseXML(xml);
-        })
-        .catch(console.error);
-};
-
-const setFavoriteBook = (id, title, author) => {
-    fetch("http://localhost:8080/favoriteBook", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ id, title, author }),
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            console.log("Success:", data);
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-        });
-};
-
-const deleteFavoriteBook = (id) => {
-    fetch(`http://localhost:8080/favoriteBook/${id}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            console.log("Success:", data);
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-        });
+      .then((response) => response.text())
+      .then((data) => {
+        hint.innerHTML = "";
+        hint.style.display = "none";
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(data, "application/xml");
+        parseXML(xml);
+      })
+      .catch(console.error);
+  }, 500);
 };
 
 const parseXML = (xml) => {
-    let i = 0;
-    document.getElementById("demo").innerHTML = "";
+  let i = 0;
+  const table = document.getElementById("table-book-data");
+  table.innerHTML = "";
 
-    const x = xml.getElementsByTagName("work");
+  const x = xml.getElementsByTagName("work");
 
-    for (i = 0; i < x.length; i++) {
-        const myTr = document.createElement("tr");
+  const idTh = document.createElement("th");
+  const titleTh = document.createElement("th");
+  const authorTh = document.createElement("th");
+  const subtitleTh = document.createElement("th");
+  const actionTh = document.createElement("th");
 
-        //TDS
-        const workIdTd = document.createElement("td");
-        const authorwebTd = document.createElement("td");
-        const titlewebTd = document.createElement("td");
-        const titleSubtitleAuthTd = document.createElement("td");
-        const favoriteButtonTd = document.createElement("td");
-        const deleteButtonTd = document.createElement("td");
+  const thead = document.createElement("thead");
 
-        workIdTd.innerHTML =
-            x[i].getElementsByTagName("workid")[0].childNodes[0].nodeValue;
+  idTh.innerHTML = "Id";
+  titleTh.innerHTML = "Title";
+  authorTh.innerHTML = "Author";
+  subtitleTh.innerHTML = "Subtitle";
+  actionTh.innerHTML = "Action";
 
-        authorwebTd.innerHTML =
-            x[i].getElementsByTagName("authorweb")[0].childNodes[0].nodeValue;
+  thead.appendChild(idTh);
+  thead.appendChild(titleTh);
+  thead.appendChild(authorTh);
+  thead.appendChild(subtitleTh);
+  thead.appendChild(actionTh);
 
-        titlewebTd.innerHTML =
-            x[i].getElementsByTagName("titleweb")[0].childNodes[0].nodeValue;
+  table.appendChild(thead);
 
-        titleSubtitleAuthTd.innerHTML =
-            x[i].getElementsByTagName("titleSubtitleAuth")[0].childNodes[0].nodeValue;
+  for (i = 0; i < x.length; i++) {
+    const myTr = document.createElement("tr");
 
-        const favoriteButton = document.createElement("button");
+    //TDS
+    const workIdTd = document.createElement("td");
+    const authorwebTd = document.createElement("td");
+    const titlewebTd = document.createElement("td");
+    const titleSubtitleAuthTd = document.createElement("td");
+    const favoriteButtonTd = document.createElement("td");
 
-        favoriteButton.addEventListener("click", () => {
-            setFavoriteBook(
-                workIdTd.innerHTML,
-                titlewebTd.innerHTML,
-                authorwebTd.innerHTML
-            );
-        });
+    const workId =
+      x[i].getElementsByTagName("workid")[0].childNodes[0].nodeValue;
 
-        favoriteButton.innerHTML = "Favorite Book";
+    let isFavorite = FavoriteIDS.includes(workId);
 
-        const deleteButton = document.createElement("button");
+    workIdTd.innerHTML = workId;
 
-        deleteButton.addEventListener("click", () => {
-            deleteFavoriteBook(workIdTd.innerHTML);
-        });
+    authorwebTd.innerHTML =
+      x[i].getElementsByTagName("authorweb")[0].childNodes[0].nodeValue;
 
-        deleteButton.innerHTML = "Delete Book";
+    titlewebTd.innerHTML =
+      x[i].getElementsByTagName("titleweb")[0].childNodes[0].nodeValue;
 
-        favoriteButtonTd.appendChild(favoriteButton);
-        deleteButtonTd.appendChild(deleteButton);
+    titleSubtitleAuthTd.innerHTML =
+      x[i].getElementsByTagName("titleSubtitleAuth")[0].childNodes[0].nodeValue;
 
-        myTr.appendChild(workIdTd);
-        myTr.appendChild(authorwebTd);
-        myTr.appendChild(titlewebTd);
-        myTr.appendChild(titleSubtitleAuthTd);
-        myTr.appendChild(favoriteButtonTd);
-        myTr.appendChild(deleteButtonTd);
+    const favoriteButton = document.createElement("button");
+    favoriteButton.className = "btn btn-outline-primary";
 
-        document.getElementById("demo").appendChild(myTr);
-    }
+    favoriteButton.addEventListener("click", () => {
+      const notFavor = favoriteButton.innerHTML === "Add to favorites";
+
+      notFavor
+        ? setFavoriteBook(
+            workIdTd.innerHTML,
+            titlewebTd.innerHTML,
+            authorwebTd.innerHTML
+          )
+        : deleteFavoriteBook(workIdTd.innerHTML);
+
+      favoriteButton.innerHTML = notFavor
+        ? "Remove from favorites"
+        : "Add to favorites";
+
+      favoriteButton.className = notFavor
+        ? "btn btn-outline-danger"
+        : "btn btn-outline-primary";
+    });
+
+    favoriteButton.innerHTML = isFavorite
+      ? "Remove from favorites"
+      : "Add to favorites";
+
+    favoriteButton.className = isFavorite
+      ? "btn btn-outline-danger"
+      : "btn btn-outline-primary";
+
+    favoriteButtonTd.appendChild(favoriteButton);
+
+    myTr.appendChild(workIdTd);
+    myTr.appendChild(authorwebTd);
+    myTr.appendChild(titlewebTd);
+    myTr.appendChild(titleSubtitleAuthTd);
+    myTr.appendChild(favoriteButtonTd);
+
+    table.appendChild(myTr);
+  }
 };

@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const fetch = require("node-fetch");
+const { Console } = require("console");
 const app = express();
 const port = 8080;
 
@@ -32,6 +33,30 @@ app.get("/", (req, res) => {
   );
 });
 
+app.get("/favorites", (req, res) => {
+  res.sendFile(
+    "favorites.html",
+    {
+      root: path.join(__dirname, "public"),
+    },
+    (err) => {
+      console.log(err);
+    }
+  );
+});
+
+app.get("/bookForm", (req, res) => {
+  res.sendFile(
+    "bookForm.html",
+    {
+      root: path.join(__dirname, "public"),
+    },
+    (err) => {
+      console.log(err);
+    }
+  );
+});
+
 // id title author
 // Should put the into a database
 const favoriteBooks = {};
@@ -41,20 +66,50 @@ app.post("/favoriteBook", (req, res) => {
 
   if (favoriteBooks[id]) {
     res.send({ message: "Book is already favorite" });
+  } else {
+    favoriteBooks[id] = { title, author, id };
+    res.send({ title, author, id });
   }
-
-  favoriteBooks[id] = { title, author };
-
-  res.send({ title });
 });
 
 app.get("/favoriteBook", (req, res) => {
-  res.send(favoriteBooks);
+  const filter = req.query.filter;
+
+  if (filter) {
+    let filteredBooks = {};
+    Object.values(favoriteBooks).forEach((book) => {
+      if (
+        book.title.toLowerCase().includes(filter.toLowerCase()) ||
+        book.author.toLowerCase().includes(filter.toLowerCase())
+      ) {
+        filteredBooks = { ...filteredBooks, book };
+      }
+    });
+
+    res.send(filteredBooks);
+  } else {
+    res.send(favoriteBooks);
+  }
+});
+
+app.get("/favoriteBook/:id", (req, res) => {
+  const { id } = req.params;
+
+  res.send(favoriteBooks[id]);
 });
 
 app.delete("/favoriteBook/:id", (req, res) => {
   const { id } = req.params;
   favoriteBooks[id] = undefined;
+
+  res.send(favoriteBooks);
+});
+
+app.put("/favoriteBook/:id", (req, res) => {
+  const { id } = req.params;
+
+  console.log(req.body);
+  favoriteBooks[id] = { ...favoriteBooks[id], ...req.body };
 
   res.send(favoriteBooks);
 });
