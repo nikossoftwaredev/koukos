@@ -39,6 +39,10 @@ const favoriteBooks = {};
 app.post("/favoriteBook", (req, res) => {
   const { title, author, id } = req.body;
 
+  if (favoriteBooks[id]) {
+    res.send({ message: "Book is already favorite" });
+  }
+
   favoriteBooks[id] = { title, author };
 
   res.send({ title });
@@ -51,5 +55,6 @@ app.get("/favoriteBook", (req, res) => {
 app.delete("/favoriteBook/:id", (req, res) => {
   const { id } = req.params;
   favoriteBooks[id] = undefined;
+
   res.send(favoriteBooks);
 });
