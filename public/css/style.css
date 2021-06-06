@@ -1,9 +1,36 @@
 body {
     padding: 1%;
+    padding-left: 2%;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 #search {
-    border-radius: 20px;
+    border-radius: 10px;
     border: 2px solid #070705;
+}
+
+.search-button {
+    border-radius: 10px;
+    background-color: azure;
+    cursor: pointer;
+    border: 2px solid #212416;
+}
+
+.awesome-button {
+    min-width: 200px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    background-color: rgb(30, 68, 172);
+    border-radius: 25px;
+    border: 2px solid #3c412a;
+    box-shadow: #6E7849 0px 0px 10px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 1em;
+    text-decoration: none;
+    padding: 10px;
+}
+
+.awesome-button:hover {
+    background-color: rgb(78, 184, 211);
 }
